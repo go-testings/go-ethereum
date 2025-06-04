@@ -55,7 +55,7 @@ jobs:
           BRANCH="${{github.event.pull_request.base.ref}}"
           TAG=$(echo "${{github.sha}}" | cut -c 1-7)
 
-          echo "DEVNET=ghcr.io/${{ github.repository }}:${BRANCH}-devnet-latest, ghcr.io/${{ github.repository }}:${BRANCH}-devnet-${TAG}" >> $GITHUB_ENV
+          echo "DEVNET=ghcr.io/${{ github.repository }}/ethereum-devnet:${BRANCH}-latest, ghcr.io/${{ github.repository }}/ethereum-devnet:${BRANCH}-${TAG}" >> $GITHUB_ENV
 
       - name: set up Docker buildx
         uses: docker/setup-buildx-action@v2
@@ -77,7 +77,8 @@ jobs:
           labels: |
             org.opencontainers.image.title=devnet
             org.opencontainers.image.version=${{ github.sha }}
-            org.opencontainers.image.source=${{ github.server_url }}/go-ethereum}}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.created=${{ github.event.pull_request.merged_at }}
           build-args: |
             COMMIT=${{ github.sha }}
             VERSION=${{ github.sha }}
