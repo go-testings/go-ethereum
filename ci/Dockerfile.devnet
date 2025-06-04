@@ -1,3 +1,20 @@
+FROM ghcr.io/go-testings/go-ethereum_alltools:master AS builder
+
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    curl \
+    jq \
+    bash
+
+WORKDIR /build
+
+COPY hardhat/package*.json ./
+RUN npm ci
+
+COPY hardhat/ ./
+RUN npx hardhat compile
+
 FROM ghcr.io/go-testings/go-ethereum_alltools:master
 
 RUN apk add --no-cache \
@@ -9,12 +26,10 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY hardhat/package.json ./
-RUN npm install
-
+COPY --from=builder /build/node_modules ./node_modules
+COPY --from=builder /build/artifacts ./artifacts
+COPY --from=builder /build/cache ./cache
 COPY hardhat/ ./
-
-RUN npx hardhat compile
 
 ENV GETH_ARGS="geth --datadir=/data --syncmode=full --cache=1024 --http --http.addr=0.0.0.0 --http.port=8545 --http.api=\${RPC_API:-eth,net,web3,debug,admin} --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.api=\${WS_API:-eth,net,web3,debug} --nodiscover"
 

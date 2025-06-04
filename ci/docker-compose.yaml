@@ -1,6 +1,6 @@
 services:
   build:
-    image: ghcr.io/go-testings/go-ethereum_alltools:master
+    image: ghcr.io/go-testings/go-ethereum:master-devnet-latest
     pull_policy: always
     ports:
       - "8545:8545"
