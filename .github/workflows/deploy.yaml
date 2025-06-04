@@ -1,14 +1,12 @@
-name: Build
-
+name: Deploy
 on:
   pull_request:
     types: [closed]
     branches:
       - master
-
 jobs:
   build:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Build')
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
     name: Build
     runs-on: ubuntu-latest
     permissions:
@@ -25,8 +23,7 @@ jobs:
           BRANCH="${{github.event.pull_request.base.ref}}"
           TAG=$(echo "${{github.sha}}" | cut -c 1-7)
 
-          echo "MAIN=ghcr.io/${{ github.repository }}:${BRANCH}-latest, ghcr.io/${{ github.repository }}:${BRANCH}-${TAG}" >> $GITHUB_ENV
-          echo "ALLTOOLS=ghcr.io/${{ github.repository }}_alltools:${BRANCH}, ghcr.io/${{ github.repository }}_alltools:${BRANCH}-${TAG}" >> $GITHUB_ENV
+          echo "DEVNET=ghcr.io/${{ github.repository }}:${BRANCH}-devnet-latest, ghcr.io/${{ github.repository }}:${BRANCH}-devnet-${TAG}" >> $GITHUB_ENV
 
       - name: set up Docker buildx
         uses: docker/setup-buildx-action@v2
@@ -38,26 +35,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push MAIN
+      - name: Build and push DEVNET
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./ci/Dockerfile
-          tags: ${{ env.MAIN }}
-          push: true
-          labels: |
-            org.opencontainers.image.version=${{ github.sha }}
-            org.opencontainers.image.source=${{ github.server_url }}/go-ethereum}}
-          build-args: |
-            COMMIT=${{ github.sha }}
-            VERSION=${{ github.sha }}
-
-      - name: Build and push ALLTOOLS
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./ci/Dockerfile.alltools
-          tags: ${{ env.ALLTOOLS }}
+          file: ./ci/Dockerfile.devnet
+          tags: ${{ env.DEVNET }}
           push: true
           labels: |
             org.opencontainers.image.version=${{ github.sha }}
