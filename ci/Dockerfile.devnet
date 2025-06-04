@@ -1,0 +1,23 @@
+FROM ghcr.io/go-testings/go-ethereum_alltools:master
+
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    curl \
+    jq \
+    bash
+
+WORKDIR /app
+
+COPY hardhat/package.json ./
+RUN npm install
+
+COPY hardhat/ ./
+
+RUN npx hardhat compile
+
+ENV GETH_ARGS="geth --datadir=/data --syncmode=full --cache=1024 --http --http.addr=0.0.0.0 --http.port=8545 --http.api=\${RPC_API:-eth,net,web3,debug,admin} --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.api=\${WS_API:-eth,net,web3,debug} --nodiscover"
+
+EXPOSE 8545 8546 30303 30303/udp
+
+CMD ["sh", "-c", "geth --datadir=/data --syncmode=full --cache=1024 --http --http.addr=0.0.0.0 --http.port=8545 --http.api=${RPC_API:-eth,net,web3,debug,admin} --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.api=${WS_API:-eth,net,web3,debug} --nodiscover"]
