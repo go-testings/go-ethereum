@@ -75,6 +75,7 @@ jobs:
           tags: ${{ env.DEVNET }}
           push: true
           labels: |
+            org.opencontainers.image.title=devnet
             org.opencontainers.image.version=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/go-ethereum}}
           build-args: |
