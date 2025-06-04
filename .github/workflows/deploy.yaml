@@ -48,7 +48,7 @@ jobs:
           build-args: |
             COMMIT=${{ github.sha }}
             VERSION=${{ github.sha }}
-            
+
   test:
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
     name: Test
@@ -57,67 +57,26 @@ jobs:
     permissions:
       contents: read
       packages: read
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set image tag
-        id: set_image_tag
-        run: |
-          BRANCH="${{github.event.pull_request.base.ref}}"
-          TAG=$(echo "${{github.sha}}" | cut -c 1-7)
-          echo "IMAGE_TAG=ghcr.io/${{ github.repository }}:${BRANCH}-devnet-${TAG}" >> $GITHUB_ENV
-      
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Pull Docker image
-        run: docker pull ${{ env.IMAGE_TAG }}
-      
+      - uses: actions/checkout@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './hardhat/package-lock.json'
-      
-      - name: Install Hardhat dependencies
-        working-directory: ./hardhat
-        run: npm ci
-      
-      - name: Start Docker container
+          node-version: "18"
+
+      - name: Install dependencies
         run: |
-          docker run -d --name ethereum-node -p 8545:8545 -p 8546:8546 ${{ env.IMAGE_TAG }}
-          # Wait for the node to start
-          sleep 10
-      
-      - name: Run Hardhat tests against container
-        working-directory: ./hardhat
+          cd hardhat
+          npm install
+
+      - name: Compile contracts
         run: |
-          # Update hardhat.config.js to point to the Docker container
-          cat > hardhat.config.js << 'EOL'
-          require("@nomicfoundation/hardhat-toolbox");
-          
-          /** @type import('hardhat/config').HardhatUserConfig */
-          module.exports = {
-            solidity: "0.8.28",
-            networks: {
-              dockernode: {
-                url: "http://localhost:8545",
-                timeout: 30000
-              }
-            }
-          };
-          EOL
-          
-          # Run tests against the Docker container
-          npx hardhat test --network dockernode
-      
-      - name: Cleanup
-        if: always()
-        run: docker stop ethereum-node || true
+          cd hardhat
+          npx hardhat compile
+
+      - name: Run tests
+        run: |
+          cd hardhat
+          npx hardhat test
