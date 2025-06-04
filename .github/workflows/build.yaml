@@ -25,8 +25,8 @@ jobs:
           BRANCH="${{github.event.pull_request.base.ref}}"
           TAG=$(echo "${{github.sha}}" | cut -c 1-7)
 
-          echo "MAIN=ghcr.io/go-ethereum/go-ethereum:${BRANCH}-latest, ghcr.io/go-ethereum/go-ethereum:${BRANCH}-${TAG}" >> $GITHUB_ENV
-          echo "ALLTOOLS=ghcr.io/go-ethereum/go-ethereum_alltools:${BRANCH}, ghcr.io/go-ethereum/go-ethereum_alltools:${BRANCH}-${TAG}" >> $GITHUB_ENV
+          echo "MAIN=ghcr.io/${{ github.repository }}:${BRANCH}-latest, ghcr.io/${{ github.repository }}:${BRANCH}-${TAG}" >> $GITHUB_ENV
+          echo "ALLTOOLS=ghcr.io/${{ github.repository }}_alltools:${BRANCH}, ghcr.io/${{ github.repository }}_alltools:${BRANCH}-${TAG}" >> $GITHUB_ENV
 
       - name: set up Docker buildx
         uses: docker/setup-buildx-action@v2
